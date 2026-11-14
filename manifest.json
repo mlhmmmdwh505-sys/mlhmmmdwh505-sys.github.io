@@ -1,6 +1,6 @@
 {
-  "name": "Molham Dashboard | لوحة ملهم الدراسية",
-  "short_name": "Molham",
+  "name": "لوحة ملهم | للدراسة والمهام",
+  "short_name": "ملهم",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#020617",
