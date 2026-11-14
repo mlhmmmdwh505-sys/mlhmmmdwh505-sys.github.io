@@ -1743,7 +1743,7 @@ const i18n = {
     ar: {
         welcome: "مرحباً بك،", mainTitle: "لوحة تحكم ",
         langLabel: "اللغة", nameLabel: "الاسم", roleLabel: "الدور", colorLabel: "اللون", dateLabel: "التاريخ", minsLabel: "الدقائق", customizeLabel: "⚙️ تخصيص لوحتك", smartLabel: "اقتراح ذكي",
-        saveBtn: "تأكيد الإعدادات", countdownTitle: "⏳ حلم التخرج",
+        saveBtn: "تأكيد الإعدادات", countdownTitle: "⏳ موعد أنت مستنيه",
         years: "سنة", days: "يوم", hours: "ساعة", storeTitle: "☕ متجر الطاقة 1د = 15ن",
         break5: "5 د = <small>75ن</small>", break10: "10 د = <small>150ن</small>", break15: "15 د = <small>225ن</small>",
         startBtnJob: "ابدأ المهمة 🚀", startBtnPause: "إيقاف مؤقت ⏸️", startBtnResume: "استئناف ▶️", startBtnBreak: "ابدأ الاستراحة ☕",
@@ -1754,7 +1754,7 @@ const i18n = {
     en: {
         welcome: "Welcome,", mainTitle: "Dashboard of ",
         langLabel: "Lang", nameLabel: "Name", roleLabel: "Role", colorLabel: "Color", dateLabel: "Date", minsLabel: "Mins", customizeLabel: "⚙️ Customize dashboard", smartLabel: "Smart suggestion",
-        saveBtn: "Confirm Settings", countdownTitle: "⏳ Graduation Dream",
+        saveBtn: "Confirm Settings", countdownTitle: "⏳ A Date You’re Waiting For",
         years: "Years", days: "Days", hours: "Hours", storeTitle: "☕ Energy Store 1m = 15p",
         break5: "5 Min = <small>75p</small>", break10: "10 Min = <small>150p</small>", break15: "15 Min = <small>225p</small>",
         startBtnJob: "Start Task 🚀", startBtnPause: "Pause ⏸️", startBtnResume: "Resume ▶️", startBtnBreak: "Start Break ☕",
