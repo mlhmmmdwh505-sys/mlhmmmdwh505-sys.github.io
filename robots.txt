@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://molham-531.github.io/sitemap.xml
