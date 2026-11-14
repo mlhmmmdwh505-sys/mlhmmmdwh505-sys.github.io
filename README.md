@@ -1,6 +1,6 @@
 # 🩺 لوحة مُلهِم الدراسيّة | Molham Study Dashboard
 
-[🔗 زيارة الموقع الحي من هنا | Live Demo](https://mlhmmmdwh505-sys.github.io/molham/index.html)
+[🔗 زيارة الموقع الحي من هنا | Live Demo](https://molham-531.github.io/)
 
 ---
 
