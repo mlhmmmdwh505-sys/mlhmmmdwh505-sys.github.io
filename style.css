@@ -3027,6 +3027,8 @@ html[data-theme="light"] .shared-date-calendar { border-color: rgba(30, 41, 59, 
     .task-date-control .custom-date-icon { inset-inline-end: 7px; width: 14px; height: 14px; }
     .task-date-control .custom-date-icon svg { width: 14px; height: 14px; }
     .settings-date-control { max-width: none; }
+    .preferences .settings-bar .input-group > .settings-date-control { width: 85% !important; }
+    .preferences .settings-date-control .custom-date-trigger { height: 42px !important; min-height: 42px !important; }
 }
 @media (prefers-reduced-motion: reduce) { .custom-date-trigger { transition: none; } }
 
