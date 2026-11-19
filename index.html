@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta name="google-site-verification" content="zTFBE1PBvuWcR2F9TmV3Y5NEpOiBw5Ehu0gFfzFi2Y0" />
     <script>
         try {
             document.documentElement.dataset.theme = localStorage.getItem('colorScheme') === 'light' ? 'light' : 'dark';
@@ -9,7 +8,7 @@
             document.documentElement.dataset.theme = 'dark';
         }
     </script>
-    <link rel="stylesheet" href="style.css?v=101">
+    <link rel="stylesheet" href="style.css?v=111">
     <link rel="stylesheet" href="fonts.css?v=12">
     <link rel="icon" type="image/png" href="gnome-books.png">
     <link rel="apple-touch-icon" href="gnome-books.png">
@@ -22,16 +21,12 @@
     <meta property="og:url" content="https://molham-531.github.io/">
     <meta property="og:image" content="https://molham-531.github.io/gnome-books.png">
     <meta name="keywords" content="ملهم ممدوح, molham, molham-531, موقع ملهم">
-    <meta name="description" content="لوحة ملهم للدراسة والمهام من تطوير ملهم ممدوح: مؤقّت Pomodoro (بومودورو)، قائمة مهام، وتتبع أسبوعي للتركيز. أداة مجانية بالعربية والإنجليزية.">
+    <meta name="description" content="هذا الموقع جميل و مثالي للدراسة و العمل و جميع المهام موقع ملهم هو اداة تنظيم و ترتيب و زيادة الانتاجية مصمم من قبل ملهم.">
     <meta name="copyright" content="Copyright © 2026 Molham Mamdouh. Original website materials reserved.">
     <meta name="verifywebsiteownership" content="tgf8hWSVWpGMEXVmzfc2SXcru"/>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>molham-531 | لوحة ملهم الدراسية</title>
-    <meta name="theme-color" content="#11190f">
-    <script defer src="firebase-app-compat.js"></script>
-    <script defer src="firebase-auth-compat.js"></script>
-    <script defer src="firebase-firestore-compat.js"></script>
     <script type="application/ld+json">
         {
             "@context": "https://schema.org",
@@ -41,12 +36,16 @@
             "url": "https://molham-531.github.io/"
         }
     </script>
+    <meta name="theme-color" content="#11190f">
+    <script defer src="firebase-app-compat.js"></script>
+    <script defer src="firebase-auth-compat.js"></script>
+    <script defer src="firebase-firestore-compat.js"></script>
 </head>
 <body class="login-visible">
     <section id="loginScreen" class="login-screen" aria-labelledby="loginTitle">
         <div class="login-card">
             <div class="login-logo-wrap"><img src="gnome-books.png" alt="شعار الموقع" class="login-logo"></div>
-            <span class="login-eyebrow">للدراسة والمهام | من تطوير ملهم ممدوح</span>
+            <span class="login-eyebrow">molham-531 · منظّم الدراسة الشخصي</span>
             <h1 id="loginTitle">أهلاً بك في لوحة ملهم</h1>
             <p id="loginDescription">سجّل بحساب Google أو بريدك الإلكتروني لمزامنة بياناتك، أو ابدأ بلوحة جديدة كضيف.</p>
             <button id="googleLoginButton" class="firebase-provider-button firebase-google-button" type="button">
@@ -208,8 +207,14 @@
                 </div>
 
                 <div class="input-group">
-                    <label id="dateLabel">التاريخ</label>
-                    <input type="date" id="gradDateInput">
+                    <label id="dateLabel" for="gradDateTrigger">التاريخ</label>
+                    <div class="custom-date-control settings-date-control">
+                        <input type="hidden" id="gradDateInput">
+                        <button type="button" class="custom-date-trigger" id="gradDateTrigger" data-date-picker-target="gradDateInput" aria-haspopup="dialog" aria-expanded="false" aria-controls="sharedDateCalendar" aria-label="اختيار تاريخ التخرج">
+                            <span class="custom-date-display" id="gradDateDisplay" aria-hidden="true">يوم/شهر/سنة</span>
+                            <span class="custom-date-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><rect x="3.25" y="5.25" width="13.5" height="12" rx="2.25" stroke="currentColor" stroke-width="1.5"/><path d="M6 3.5v3M14 3.5v3M3.5 8.5h13M7 11.5h.01M10 11.5h.01M13 11.5h.01M7 14.5h.01M10 14.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                        </button>
+                    </div>
                 </div>
 
                 <button id="mainSaveBtn">تأكيد الإعدادات</button>
@@ -256,7 +261,7 @@
         <div class="dashboard-grid">
             <aside class="side-col">
                 <section class="info-card countdown-card">
-                    <h3 id="countdownTitle">⏳ موعد أنت مستنيه</h3>
+                    <h3 id="countdownTitle">⏳ حلم التخرج</h3>
                     <div id="countdown" class="modern-timer">
                         <div class="unit"><span id="years">00</span><label id="labelYears">سنة</label></div>
                         <div class="unit"><span id="days">00</span><label id="labelDays">يوم</label></div>
@@ -321,12 +326,25 @@
                                 <option value="low">منخفضة</option>
                             </select>
                         </label>
+                        <label class="task-control">
+                            <span id="taskDateLabel">التاريخ</span>
+                            <div class="custom-date-control task-date-control">
+                                <input type="hidden" id="taskDueDateInput">
+                                <button type="button" class="custom-date-trigger" id="taskDueDateTrigger" data-date-picker-target="taskDueDateInput" aria-haspopup="dialog" aria-expanded="false" aria-controls="sharedDateCalendar" aria-label="اختيار تاريخ المهمة">
+                                    <span class="custom-date-display" id="taskDueDateDisplay" aria-hidden="true">يوم/شهر/سنة</span>
+                                    <span class="custom-date-icon" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none"><rect x="3.25" y="5.25" width="13.5" height="12" rx="2.25" stroke="currentColor" stroke-width="1.5"/><path d="M6 3.5v3M14 3.5v3M3.5 8.5h13M7 11.5h.01M10 11.5h.01M13 11.5h.01M7 14.5h.01M10 14.5h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></span>
+                                </button>
+                            </div>
+                        </label>
+                        <label class="task-control">
+                            <span id="taskCategoryLabel">الوسم</span>
+                            <input type="text" id="taskCategoryInput" maxlength="32" placeholder="مثال: أحياء" aria-label="وسم المهمة، مثل المادة الدراسية">
+                        </label>
                     </div>
                     <ul id="taskList" class="custom-scroll"></ul>
                 </section>
             </main>
         </div>
-
         <section class="study-week-card info-card" aria-labelledby="studyWeekTitle">
             <div class="study-week-heading">
                 <div>
@@ -374,7 +392,21 @@
         <button type="button" id="quickFocusButton"><span aria-hidden="true">⏱</span><span id="quickFocusLabel">بدء التركيز</span></button>
     </nav>
     <div class="focus-session-toast" id="focusSessionToast" role="status" aria-live="polite" hidden></div>
+    <section class="shared-date-calendar" id="sharedDateCalendar" role="dialog" aria-modal="false" aria-labelledby="sharedCalendarTitle" hidden>
+        <div class="shared-calendar-header">
+            <button type="button" class="shared-calendar-nav" id="sharedCalendarPrevious" aria-label="الشهر السابق">‹</button>
+            <h2 id="sharedCalendarTitle" aria-live="polite"></h2>
+            <button type="button" class="shared-calendar-nav" id="sharedCalendarNext" aria-label="الشهر التالي">›</button>
+        </div>
+        <div class="shared-calendar-weekdays" id="sharedCalendarWeekdays" aria-hidden="true"></div>
+        <div class="shared-calendar-days" id="sharedCalendarDays" role="group" aria-labelledby="sharedCalendarTitle"></div>
+        <div class="shared-calendar-footer">
+            <button type="button" id="sharedCalendarToday">اليوم</button>
+            <button type="button" id="sharedCalendarClear">مسح</button>
+            <button type="button" id="sharedCalendarClose">إغلاق</button>
+        </div>
+    </section>
 <video id="bgTrack" playsinline autoplay loop muted style="position:fixed; width:1px; height:1px; opacity:0.01; pointer-events:none;"></video>
-    <script defer src="script.js?v=138"></script>
+    <script defer src="script.js?v=144"></script>
 </body>
 </html>

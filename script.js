@@ -111,6 +111,7 @@ const dashboardLabels = {
         focusMode: 'وضع التركيز', exitFocus: 'إنهاء التركيز', quickAdd: 'إضافة مهمة', quickFocus: 'بدء التركيز', quickResume: 'متابعة التركيز', quickBreak: 'بدء الاستراحة',
         sessionComplete: minutes => `أحسنت! أنهيت جلسة تركيز مدتها ${minutes}.`, streakDays: count => `${count} ${count === 1 ? 'يوم' : 'أيام'}`,
         taskPriorityLabel: 'الأولوية',
+        taskDateLabel: 'التاريخ', taskCategoryLabel: 'الوسم', taskCategoryPlaceholder: 'مثال: أحياء',
         emptyStreak: 'ابدأ جلسة مذاكرة اليوم'
     },
     en: {
@@ -132,6 +133,7 @@ const dashboardLabels = {
         focusMode: 'Focus mode', exitFocus: 'Exit focus', quickAdd: 'Add task', quickFocus: 'Start focus', quickResume: 'Resume focus', quickBreak: 'Start break',
         sessionComplete: minutes => `Well done! You completed a ${minutes} focus session.`, streakDays: count => `${count} ${count === 1 ? 'day' : 'days'}`,
         taskPriorityLabel: 'Priority',
+        taskDateLabel: 'Date', taskCategoryLabel: 'Tag', taskCategoryPlaceholder: 'e.g. Biology',
         emptyStreak: 'Start a study session today'
     }
 };
@@ -583,6 +585,8 @@ function applyDashboardLanguage() {
         studyWeekKicker: labels.weekKicker,
         studyWeekTitle: labels.weekTitle,
         taskPriorityLabel: labels.taskPriorityLabel,
+        taskDateLabel: labels.taskDateLabel,
+        taskCategoryLabel: labels.taskCategoryLabel,
         gamePassTitle: labels.gameTitle,
         gamePassSubtitle: labels.gameSubtitle,
         gamePassCost: labels.gameCost,
@@ -594,6 +598,8 @@ function applyDashboardLanguage() {
         const element = document.getElementById(id);
         if (element) element.textContent = text;
     });
+    const taskCategoryInput = document.getElementById('taskCategoryInput');
+    if (taskCategoryInput) taskCategoryInput.placeholder = labels.taskCategoryPlaceholder;
 
     const overview = document.getElementById('dailyOverview');
     if (overview) overview.setAttribute('aria-label', labels.overview);
@@ -637,6 +643,9 @@ function initializeDashboardFeatures() {
     const quickFocusButton = document.getElementById('quickFocusButton');
     const gameButton = document.getElementById('gameEnterButton');
     const endGameButton = document.getElementById('closeGameSessionButton');
+    initializeSharedDatePicker();
+    updateTaskDueDateDisplay();
+    updateGraduationDateDisplay();
 
     const setDashboardActionMenuOpen = (open, restoreFocus = false) => {
         if (!topActionsToggle || !dashboardActionMenu) return;
@@ -1743,7 +1752,7 @@ const i18n = {
     ar: {
         welcome: "مرحباً بك،", mainTitle: "لوحة تحكم ",
         langLabel: "اللغة", nameLabel: "الاسم", roleLabel: "الدور", colorLabel: "اللون", dateLabel: "التاريخ", minsLabel: "الدقائق", customizeLabel: "⚙️ تخصيص لوحتك", smartLabel: "اقتراح ذكي",
-        saveBtn: "تأكيد الإعدادات", countdownTitle: "⏳ موعد أنت مستنيه",
+        saveBtn: "تأكيد الإعدادات", countdownTitle: "⏳ حلم التخرج",
         years: "سنة", days: "يوم", hours: "ساعة", storeTitle: "☕ متجر الطاقة 1د = 15ن",
         break5: "5 د = <small>75ن</small>", break10: "10 د = <small>150ن</small>", break15: "15 د = <small>225ن</small>",
         startBtnJob: "ابدأ المهمة 🚀", startBtnPause: "إيقاف مؤقت ⏸️", startBtnResume: "استئناف ▶️", startBtnBreak: "ابدأ الاستراحة ☕",
@@ -1754,7 +1763,7 @@ const i18n = {
     en: {
         welcome: "Welcome,", mainTitle: "Dashboard of ",
         langLabel: "Lang", nameLabel: "Name", roleLabel: "Role", colorLabel: "Color", dateLabel: "Date", minsLabel: "Mins", customizeLabel: "⚙️ Customize dashboard", smartLabel: "Smart suggestion",
-        saveBtn: "Confirm Settings", countdownTitle: "⏳ A Date You’re Waiting For",
+        saveBtn: "Confirm Settings", countdownTitle: "⏳ Graduation Dream",
         years: "Years", days: "Days", hours: "Hours", storeTitle: "☕ Energy Store 1m = 15p",
         break5: "5 Min = <small>75p</small>", break10: "10 Min = <small>150p</small>", break15: "15 Min = <small>225p</small>",
         startBtnJob: "Start Task 🚀", startBtnPause: "Pause ⏸️", startBtnResume: "Resume ▶️", startBtnBreak: "Start Break ☕",
@@ -1955,6 +1964,8 @@ function applyLanguage(lang) {
     renderDailyOverview();
     renderStudyWeek();
     updateThemeToggleLabel();
+    updateTaskDueDateDisplay();
+    updateGraduationDateDisplay();
 }
 
 if(document.getElementById('langSelect')) {
@@ -2403,6 +2414,249 @@ function startGraduationCountdown() {
 // ==========================================
 // 9️⃣ إدارة المهام (To-Do List)
 // ==========================================
+let activeDatePickerInput = null;
+let activeDatePickerTrigger = null;
+let visibleCalendarMonth = null;
+let calendarCursorDate = null;
+
+function getISODateParts(value) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ''));
+    if (!match) return null;
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    return Number.isNaN(date.getTime()) || date.getFullYear() !== Number(match[1])
+        || date.getMonth() !== Number(match[2]) - 1 || date.getDate() !== Number(match[3]) ? null : date;
+}
+
+function getLocalISODate(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function formatCustomDate(value) {
+    const date = getISODateParts(value);
+    if (!date) return '';
+    let formatted = `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    if (currentLang === 'ar') formatted = formatted.replace(/\d/g, digit => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]);
+    return formatted;
+}
+
+function updateCustomDateField(inputId, displayId, triggerId, fieldKind) {
+    const input = document.getElementById(inputId);
+    const display = document.getElementById(displayId);
+    const trigger = document.getElementById(triggerId);
+    if (!input || !display || !trigger) return;
+    const hasDate = Boolean(input.value);
+    display.textContent = hasDate ? formatCustomDate(input.value) : currentLang === 'ar' ? 'يوم/شهر/سنة' : 'DD/MM/YYYY';
+    display.dir = hasDate || currentLang === 'en' ? 'ltr' : 'rtl';
+    trigger.classList.toggle('has-value', hasDate);
+    const label = fieldKind === 'graduation'
+        ? (currentLang === 'ar' ? 'اختيار تاريخ التخرج' : 'Choose graduation date')
+        : (currentLang === 'ar' ? 'اختيار تاريخ المهمة' : 'Choose task due date');
+    trigger.setAttribute('aria-label', hasDate ? `${label}: ${formatCustomDate(input.value)}` : label);
+}
+
+function updateTaskDueDateDisplay() {
+    updateCustomDateField('taskDueDateInput', 'taskDueDateDisplay', 'taskDueDateTrigger', 'task');
+}
+
+function updateGraduationDateDisplay() {
+    updateCustomDateField('gradDateInput', 'gradDateDisplay', 'gradDateTrigger', 'graduation');
+}
+
+function getCalendarLocale() {
+    return currentLang === 'ar' ? 'ar-EG' : 'en-US';
+}
+
+function renderSharedCalendar() {
+    const calendar = document.getElementById('sharedDateCalendar');
+    const title = document.getElementById('sharedCalendarTitle');
+    const weekdays = document.getElementById('sharedCalendarWeekdays');
+    const days = document.getElementById('sharedCalendarDays');
+    if (!calendar || !title || !weekdays || !days || !visibleCalendarMonth) return;
+
+    const isArabic = currentLang === 'ar';
+    const locale = getCalendarLocale();
+    const weekStart = isArabic ? 6 : 0;
+    const selectedKey = activeDatePickerInput?.value || '';
+    calendar.dir = isArabic ? 'rtl' : 'ltr';
+    calendar.setAttribute('aria-label', activeDatePickerInput?.id === 'gradDateInput'
+        ? (isArabic ? 'اختيار تاريخ التخرج' : 'Choose graduation date')
+        : (isArabic ? 'اختيار تاريخ المهمة' : 'Choose task due date'));
+    title.textContent = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(visibleCalendarMonth);
+
+    const previous = document.getElementById('sharedCalendarPrevious');
+    const next = document.getElementById('sharedCalendarNext');
+    const todayButton = document.getElementById('sharedCalendarToday');
+    const clearButton = document.getElementById('sharedCalendarClear');
+    const closeButton = document.getElementById('sharedCalendarClose');
+    if (previous) previous.setAttribute('aria-label', isArabic ? 'الشهر السابق' : 'Previous month');
+    if (next) next.setAttribute('aria-label', isArabic ? 'الشهر التالي' : 'Next month');
+    if (todayButton) todayButton.textContent = isArabic ? 'اليوم' : 'Today';
+    if (clearButton) {
+        clearButton.textContent = isArabic ? 'مسح' : 'Clear';
+        clearButton.hidden = activeDatePickerInput?.id !== 'taskDueDateInput';
+    }
+    if (closeButton) closeButton.textContent = isArabic ? 'إغلاق' : 'Close';
+
+    const sunday = new Date(2023, 0, 1);
+    const weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+    weekdays.replaceChildren();
+    for (let offset = 0; offset < 7; offset += 1) {
+        const weekday = document.createElement('span');
+        weekday.textContent = weekdayFormatter.format(new Date(2023, 0, sunday.getDate() + ((weekStart + offset) % 7)));
+        weekdays.append(weekday);
+    }
+
+    const firstOfMonth = new Date(visibleCalendarMonth.getFullYear(), visibleCalendarMonth.getMonth(), 1);
+    const leadingDays = (firstOfMonth.getDay() - weekStart + 7) % 7;
+    const firstCell = new Date(firstOfMonth.getFullYear(), firstOfMonth.getMonth(), 1 - leadingDays);
+    const todayKey = getLocalISODate(new Date());
+    const longDateFormatter = new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    days.replaceChildren();
+    for (let index = 0; index < 42; index += 1) {
+        const date = new Date(firstCell.getFullYear(), firstCell.getMonth(), firstCell.getDate() + index);
+        const key = getLocalISODate(date);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'shared-calendar-day';
+        button.dataset.calendarDate = key;
+        button.textContent = isArabic ? String(date.getDate()).replace(/\d/g, digit => '٠١٢٣٤٥٦٧٨٩'[Number(digit)]) : String(date.getDate());
+        button.setAttribute('aria-label', longDateFormatter.format(date));
+        button.setAttribute('aria-pressed', String(key === selectedKey));
+        if (date.getMonth() !== visibleCalendarMonth.getMonth()) button.classList.add('is-outside-month');
+        if (key === todayKey) {
+            button.classList.add('is-today');
+            button.setAttribute('aria-current', 'date');
+        }
+        if (key === selectedKey) button.classList.add('is-selected');
+        button.tabIndex = calendarCursorDate && key === getLocalISODate(calendarCursorDate) ? 0 : -1;
+        days.append(button);
+    }
+}
+
+function positionSharedCalendar() {
+    const calendar = document.getElementById('sharedDateCalendar');
+    if (!calendar || calendar.hidden || !activeDatePickerTrigger) return;
+    const anchor = activeDatePickerTrigger.getBoundingClientRect();
+    const margin = 10;
+    const width = calendar.offsetWidth;
+    const height = calendar.offsetHeight;
+    const left = Math.max(margin, Math.min(window.innerWidth - width - margin, anchor.left + (anchor.width - width) / 2));
+    let top = anchor.bottom + 8;
+    if (top + height > window.innerHeight - margin) top = anchor.top - height - 8;
+    top = Math.max(margin, Math.min(window.innerHeight - height - margin, top));
+    calendar.style.left = `${left}px`;
+    calendar.style.top = `${top}px`;
+}
+
+function closeSharedCalendar(restoreFocus = false) {
+    const calendar = document.getElementById('sharedDateCalendar');
+    if (calendar) calendar.hidden = true;
+    activeDatePickerTrigger?.setAttribute('aria-expanded', 'false');
+    const trigger = activeDatePickerTrigger;
+    activeDatePickerInput = null;
+    activeDatePickerTrigger = null;
+    if (restoreFocus) trigger?.focus({ preventScroll: true });
+}
+
+function openSharedCalendar(trigger) {
+    const calendar = document.getElementById('sharedDateCalendar');
+    const input = document.getElementById(trigger.dataset.datePickerTarget);
+    if (!calendar || !input) return;
+    activeDatePickerInput = input;
+    activeDatePickerTrigger = trigger;
+    const selected = getISODateParts(input.value) || new Date();
+    calendarCursorDate = new Date(selected.getFullYear(), selected.getMonth(), selected.getDate());
+    visibleCalendarMonth = new Date(selected.getFullYear(), selected.getMonth(), 1);
+    trigger.setAttribute('aria-expanded', 'true');
+    calendar.hidden = false;
+    renderSharedCalendar();
+    positionSharedCalendar();
+    window.requestAnimationFrame(() => document.querySelector('.shared-calendar-day[tabindex="0"]')?.focus({ preventScroll: true }));
+}
+
+function commitSharedCalendarDate(value) {
+    if (!activeDatePickerInput) return;
+    activeDatePickerInput.value = value;
+    if (activeDatePickerInput.id === 'taskDueDateInput') updateTaskDueDateDisplay();
+    else updateGraduationDateDisplay();
+    activeDatePickerInput.dispatchEvent(new Event('input', { bubbles: true }));
+    activeDatePickerInput.dispatchEvent(new Event('change', { bubbles: true }));
+    closeSharedCalendar(true);
+}
+
+function moveCalendarCursor(days, focus = true) {
+    if (!calendarCursorDate) return;
+    const moved = new Date(calendarCursorDate.getFullYear(), calendarCursorDate.getMonth(), calendarCursorDate.getDate() + days);
+    calendarCursorDate = moved;
+    if (moved.getMonth() !== visibleCalendarMonth.getMonth() || moved.getFullYear() !== visibleCalendarMonth.getFullYear()) {
+        visibleCalendarMonth = new Date(moved.getFullYear(), moved.getMonth(), 1);
+    }
+    renderSharedCalendar();
+    positionSharedCalendar();
+    if (focus) document.querySelector(`.shared-calendar-day[data-calendar-date="${getLocalISODate(moved)}"]`)?.focus({ preventScroll: true });
+}
+
+function changeVisibleCalendarMonth(amount) {
+    if (!visibleCalendarMonth) return;
+    const year = visibleCalendarMonth.getFullYear();
+    const month = visibleCalendarMonth.getMonth() + amount;
+    const day = calendarCursorDate?.getDate() || 1;
+    const nextMonth = new Date(year, month, 1);
+    const lastDay = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0).getDate();
+    calendarCursorDate = new Date(nextMonth.getFullYear(), nextMonth.getMonth(), Math.min(day, lastDay));
+    visibleCalendarMonth = nextMonth;
+    renderSharedCalendar();
+    positionSharedCalendar();
+    document.querySelector(`.shared-calendar-day[data-calendar-date="${getLocalISODate(calendarCursorDate)}"]`)?.focus({ preventScroll: true });
+}
+
+function initializeSharedDatePicker() {
+    const calendar = document.getElementById('sharedDateCalendar');
+    if (!calendar) return;
+    document.querySelectorAll('[data-date-picker-target]').forEach(trigger => {
+        trigger.addEventListener('click', () => openSharedCalendar(trigger));
+    });
+    document.getElementById('sharedCalendarPrevious')?.addEventListener('click', () => changeVisibleCalendarMonth(-1));
+    document.getElementById('sharedCalendarNext')?.addEventListener('click', () => changeVisibleCalendarMonth(1));
+    document.getElementById('sharedCalendarToday')?.addEventListener('click', () => commitSharedCalendarDate(getLocalISODate(new Date())));
+    document.getElementById('sharedCalendarClear')?.addEventListener('click', () => commitSharedCalendarDate(''));
+    document.getElementById('sharedCalendarClose')?.addEventListener('click', () => closeSharedCalendar(true));
+    document.getElementById('sharedCalendarDays')?.addEventListener('click', event => {
+        const day = event.target.closest('[data-calendar-date]');
+        if (day) commitSharedCalendarDate(day.dataset.calendarDate);
+    });
+    calendar.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            closeSharedCalendar(true);
+            return;
+        }
+        if (!event.target.matches('[data-calendar-date]')) return;
+        const isArabic = currentLang === 'ar';
+        const weekStart = isArabic ? 6 : 0;
+        if (event.key === 'ArrowRight') { event.preventDefault(); moveCalendarCursor(isArabic ? -1 : 1); }
+        else if (event.key === 'ArrowLeft') { event.preventDefault(); moveCalendarCursor(isArabic ? 1 : -1); }
+        else if (event.key === 'ArrowDown') { event.preventDefault(); moveCalendarCursor(7); }
+        else if (event.key === 'ArrowUp') { event.preventDefault(); moveCalendarCursor(-7); }
+        else if (event.key === 'Home' || event.key === 'End') {
+            event.preventDefault();
+            const dayOffset = (calendarCursorDate.getDay() - weekStart + 7) % 7;
+            moveCalendarCursor(event.key === 'Home' ? -dayOffset : 6 - dayOffset);
+        } else if (event.key === 'PageUp') { event.preventDefault(); changeVisibleCalendarMonth(-1); }
+        else if (event.key === 'PageDown') { event.preventDefault(); changeVisibleCalendarMonth(1); }
+    });
+    document.addEventListener('click', event => {
+        if (calendar.hidden || calendar.contains(event.target) || activeDatePickerTrigger?.contains(event.target)) return;
+        closeSharedCalendar(false);
+    }, true);
+    window.addEventListener('resize', positionSharedCalendar);
+    window.addEventListener('scroll', () => {
+        if (!calendar.hidden) closeSharedCalendar(false);
+    }, true);
+    updateTaskDueDateDisplay();
+    updateGraduationDateDisplay();
+}
+
 function addTask() {
     const input = document.getElementById('taskInput');
     if (!input) return;
@@ -2414,6 +2668,8 @@ function addTask() {
         text,
         done: false,
         priority: priorityInput?.value || 'medium',
+        dueDate: document.getElementById('taskDueDateInput')?.value || '',
+        category: document.getElementById('taskCategoryInput')?.value.trim() || '',
         createdAt: Date.now(),
         completedAt: null,
         pointsAwarded: false
@@ -2421,7 +2677,14 @@ function addTask() {
     localStorage.setItem('surgeonTasks', JSON.stringify(tasks));
     saveCloudStateImmediately();
     input.value = '';
+    const dueDateInput = document.getElementById('taskDueDateInput');
+    const categoryInput = document.getElementById('taskCategoryInput');
+    if (dueDateInput) dueDateInput.value = '';
+    updateTaskDueDateDisplay();
+    if (categoryInput) categoryInput.value = '';
     renderTasks();
+    const taskList = document.getElementById('taskList');
+    if (taskList) taskList.scrollTop = 0;
 }
 
 window.toggleTask = function(index) {
@@ -2502,6 +2765,20 @@ function renderTasks() {
         priorityBadge.className = `task-priority priority-${priority}`;
         priorityBadge.textContent = priority === 'high' ? labels.priorityHigh : priority === 'low' ? labels.priorityLow : labels.priorityMedium;
         meta.append(priorityBadge);
+        if (task.category) {
+            const categoryBadge = document.createElement('span');
+            categoryBadge.className = 'task-category-badge';
+            categoryBadge.textContent = String(task.category);
+            meta.append(categoryBadge);
+        }
+        if (task.dueDate) {
+            const dueBadge = document.createElement('time');
+            dueBadge.className = 'task-due-date';
+            dueBadge.dateTime = String(task.dueDate);
+            const dueDate = new Date(`${task.dueDate}T00:00:00`);
+            dueBadge.textContent = Number.isNaN(dueDate.getTime()) ? String(task.dueDate) : dueDate.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' });
+            meta.append(dueBadge);
+        }
         content.append(title, meta);
 
         const remove = document.createElement('button');
